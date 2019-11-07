@@ -62,5 +62,54 @@
                 }
             }
         }
-      }
-      ?>
+        
+        public function fetchBill(){
+            if(trim($_SESSION["name"])=="K S Automobiles"){
+                $this->db->query("SELECT b.billno, b.name, b.date, b.vehicleno, b.vehiclename, b.email, b.mobileno, b.km, b.total FROM bills b INNER JOIN users u ON b.fid=u.id ORDER BY b.date DESC");
+            }else{
+                $this->db->query("SELECT b.billno, b.name, b.date, b.vehicleno, b.vehiclename, b.email, b.mobileno, b.km, b.total FROM bills b INNER JOIN users u ON b.fid=u.id WHERE u.workshopname=:workshopname ORDER BY b.date DESC");
+                $this->db->bind(":workshopname", $_SESSION["workshopname"]);
+            }
+
+            $data = $this->db->resultSet();
+            return $data;
+        }
+        
+        public function fetchBillParticulars($billno){
+            $this->db->query("SELECT p.particular, p.rate, p.amount, p.gst, p.quantity FROM particulars p INNER JOIN bills b ON p.bills_fid=b.billno WHERE b.billno=:billno");
+            $this->db->bind(":billno", $billno);
+            $data = $this->db->resultSet();
+            return $data;
+        }
+        
+        public function deleteBill($billno){
+            $this->db->query("DELETE bills FROM bills INNER JOIN users ON bills.fid=users.id WHERE bills.billno=:billno AND users.workshopname=:workshopname");
+            $this->db->bind(":billno", $billno);
+            $this->db->bind(":workshopname", $_SESSION["workshopname"]);
+            if($this->db->execute()){
+                return true;
+            }else{
+                return false;
+            }
+            
+        }
+        
+        public function searchVehicle($vehicleno){
+            $this->db->query("SELECT b.billno, b.name, b.date, b.vehicleno, b.vehiclename, b.email, b.mobileno, b.km, b.total FROM bills b WHERE vehicleno=:vehicleno");
+            $this->db->bind(":vehicleno", trim($vehicleno));
+            $count = $this->db->resultSet();
+            if($count){
+                return $count;
+            }else{
+                return false;
+            }
+        }
+        
+        public function fetchWorkshopAddress($billno){
+            $this->db->query("SELECT workshopaddress from users INNER JOIN bills ON users.id=bills.fid WHERE bills.billno=:billno");
+            $this->db->bind(":billno", $billno);
+            return $this->db->single();
+        }
+    }
+
+?>
