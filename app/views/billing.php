@@ -660,7 +660,404 @@ a {
 
 
 
+  <script> 
+  
+  //search form 
+  $("#searcho").on('click', function(){
+    var vehicleno = $("#searchinput").val();
+    if(vehicleno!=""){
+        getSearchResults(vehicleno);
+    }
+  });
+  
+  function getSearchResults(vehicleno){
+       $.ajax({
+            method: 'POST',
+            url: "../defaultpage/searchVehicle",
+            dataType: 'JSON',
+            data: {vehicleno:vehicleno},
+            success: function (result) {
+                 var row = "";
+                if(result == "No result found! "){
+                    row += "No result found!";
+                }else{
+                    result.forEach(($data, i) => {
+                       row += `<div id="${$data.billno}" onclick = "billAbs(this)">
+          <div class="abstractB">
+              <div class="innerspan"><span class="dontuse" style="text-transform:uppercase">${$data.billno}</span>
+              </div>
+              <div class="innerspan hidename"><span class="dontuse" style="text-transform: capitalize;">${$data.name}</span>
+              </div>
+              <div class="innerspan"><span class="dontuse">${$data.date}</span>
+              </div>
+              <div class="innerspan notshow"><span class="dontuse">${$data.email}</span>
+              </div>
+              <div class="innerspan notshow"><span class="dontuse">${$data.mobileno}</span>
+              </div>
+              <div class="innerspan"><span class="dontuse" style="text-transform:uppercase">${$data.vehicleno}</span>
+              </div>
+              <div class="innerspan notshow"><span class="dontuse">${$data.vehiclename}</span>
+              </div>
+              <div class="innerspan notshow"><span class="dontuse">${$data.km}</span></div>
+              <div class="innerspan notshow"><span class="dontuse">${$data.total}</span>
+            </div>
+          </div>
+        </div>`;
+                    });
+                }
+            $("#appendsresult").html(row);
+            },  
+            error: function (result) {
+              console.log(result);
+            $("#appendsresult").html("No result found!");
+            }
+        });
+  }
+ 
+    //get particulars of bill on modal
+    function getParticulars(billno){
+      $.ajax({
+            method: 'POST',
+            url: "../defaultpage/fetchBillParticulars",
+            dataType: 'JSON',
+            data: {billno:billno},
+            success: function (result) {
+              let rows =  '';
+              
+        result.forEach((room, i) => {
+        rows += `
+        <tr><td class="text-center">${i+1}</td>
+            <td class="text-center">${room.particular}</td>
+            <td class="text-center">${room.rate}</td>
+            <td class="text-center">${room.quantity}</td>
+            <td class="text-center">${room.gst}</td>
+            <td class="text-center">${room.amount}</td>
+        </tr>`;
+            });
+            $("#fulltabledata").html(rows);},  
+            error: function (result) {
+              alert("Error occured, refresh the page and try again.");
+            }
 
+
+        
+            
+          });
+    }
+    $("#printBill").on('click', function(){
+      window.print($("#billPrint"));
+    });
+    //appling autocomplete jquery plugin
+    var availableTags = [
+      "Labour","Wheel Alignment", "Wheel Balancing", "Weight Alloy", "Weight Ordinary", "Tyre Changes", "Side Changes", "Camber Bolt/Sim", "Rim Straight", "Washing","Dry Cleaners", "A.C. Gas", "R. 134 Oil", "Solding", "Cooling Coil Serves", "Ring", "Wall"
+    ];
+    $( ".tags" ).autocomplete({
+      source: availableTags
+    });
+
+    const $tableID = $('#table');
+    const $BTN = $('#export-btn');
+    const $EXPORT = $('#export');
+
+    //adding bill elements
+    var calll= 0;
+    $('.table-add').on('click',() => {
+      $('#tablebody').append(`<tr class="res1">         
+              <td class="pt-3-half tagss`+calll+`" contenteditable="true">Labour</td>
+              <td class="pt-3-half chgE" contenteditable="true">0</td>
+              <td class="pt-3-half chgE" contenteditable="true">0</td>
+              <td class="pt-3-half chgE" contenteditable="true">0</td>
+              <td class="pt-3-half chgE" contenteditable="true">0</td>
+              <td>
+                <span class="table-remove"><button type="button"
+                    class="btn btn-danger btn-rounded btn-sm my-0">Remove</button></span>
+              </td>
+            </tr>`
+      );
+      $(".tagss"+calll).autocomplete({
+        source: availableTags
+      });
+      manipulation();
+      calll = calll + 1;
+    });
+
+  //removing bill elements
+  $tableID.on('click', '.table-remove', function () {
+    $(this).parents('tr').detach();
+    finalTotal();
+  });
+
+
+  //jQuery helpers for exporting only
+  jQuery.fn.pop = [].pop;
+  jQuery.fn.shift = [].shift;
+  $data = [];
+  //$BTN.on('click', collectEntry);
+  $("#print").on('click', collectEntry);
+  function collectEntry(){
+    const $rows = $tableID.find('tr:not(:hidden)');
+    const headers = [];
+    const data = [];
+
+    // Get the headers (add special header logic here)
+    $($rows.shift()).find('th:not(:empty)').each(function () {
+     headers.push($(this).text().toLowerCase());
+    });
+    headers.pop();
+    const dataa = {};
+    // Turn all existing rows into a loopable array
+    const smdata = [];
+    $rows.each(function () {
+      const $td = $(this).find('td');
+      const h = {};
+     // Use the headers from earlier to name our hash keys and get all the bill elements
+      headers.forEach((header, i) => {
+        h[header] = $td.eq(i).text();
+     });
+     smdata.push(h);
+    });
+    // Inserting all bill elements
+    dataa["menu"] = smdata;
+   
+    // Taking the bill header elements
+    const $FORM = $("#form");
+    const $formRow = $FORM.find(".extData");
+    const labels = [];
+    let notvalid = false;
+    $formRow.each(function(){
+      const $label = $(this).find('label');
+      const $input = $(this).find('input');
+      const l = {};
+      if($input[0].value=="" && $label.eq(0).text().toLowerCase()!="email:"){
+        notvalid = true;
+      }else{
+        dataa[$label.eq(0).text().toLowerCase().replace(/ |:/g, "")] = $input[0].value.trim();
+      }
+   });
+   dataa["total"] = $("#Total").val(); 
+
+    if(notvalid){
+      alert("Notvalid");
+    }else{
+      $data = dataa;
+      //$EXPORT.text(JSON.stringify($data));
+      insertPrint();
+      //console.log(JSON.stringify($data));
+    }
+  } 
+
+  function insertPrint(){
+    $.ajax({
+            method: 'POST',
+            url: '../defaultpage/insertBill',
+            data: JSON.stringify($data),
+            success: function (data) {
+              if(data=="Bill_not_inserted "){
+                alert("Bill with this Bill No. is already exists.");
+              }else if(data=="Bill_inserted_successfully "){
+                alert("Bill is saved successfully");
+                appendPrint();
+              }else{
+                  alert("Error occured in insertPrintjs");
+              }
+            },
+            error: function (data) {
+                console.log(data);
+              alert("Bill with this number is already exits.");
+            }
+          });
+   }
+
+   function manipulation(){
+    $(".chgE").on('input', function(){
+      let chgE = $(this).parent().find(".chgE");
+      let rate = chgE.eq(0).text();
+      let quantity = chgE.eq(1).text();
+      let gst = chgE.eq(2).text();
+      chgE.eq(3).text(((1+gst/100)*(rate*quantity)).toFixed(2));
+      finalTotal();
+    });
+   }
+
+   function finalTotal(){
+     let length = $(".chgE").length;
+     let i = 3;
+     let total = 0;
+     while(i<length){
+      total += Number($(".chgE").eq(i).text());
+       i+= 4;
+     }
+     $("#Total").val(total.toFixed(2));
+   }
+
+   function appendPrint(){
+    $(".bnuckw").eq(0).text($data["billno"]);
+    $(".bnuckw").eq(1).text($data["name"]);
+    $(".bnuckw").eq(2).text($data["data"]);
+    $(".bnuckw").eq(3).text($data["email"]);
+    $(".bnuckw").eq(4).text($data["mobileno"]);
+    $(".bnuckw").eq(5).text($data["vehicleno"]);
+    $(".bnuckw").eq(6).text($data["vehiclename"]);
+    $(".bnuckw").eq(7).text($data["km"]);
+    $("#printTotla").text($data["total"]);
+
+    $data["menu"].forEach(cllFunction);
+    function cllFunction(item, index){
+      let aptr = `                <tr>
+                  <td class="text-center">${index+1}</td>
+                  <td class="text-center">${item.particulars}</td>
+                  <td class="text-center">${item.rate}</td>
+                  <td class="text-center">${item.quantity}</td>
+                  <td class="text-center">${item.gst}</td>
+                  <td class="text-center">${item.amount}</td>
+                </tr>`;
+      $("#tabledata").append(aptr);
+    }
+    //window.print();
+    $("#absContainer").prepend(`  <div onclick = billAbs(this); id="${$data['billno']}">
+      <div class="abstractB">
+          <div class="innerspan"><span class="dontuse" style="text-transform:uppercase">${$data['billno']}</span>
+          </div>
+          <div class="innerspan hidename"><span class="dontuse" style="text-transform: capitalize;">${$data["name"]}</span>
+          </div>
+          <div class="innerspan"><span class="dontuse">${$data["date"]}</span>
+          </div>
+          <div class="innerspan notshow"><span class="dontuse">${$data["email"]}</span>
+          </div>
+          <div class="innerspan notshow"><span class="dontuse">${$data["mobileno"]}</span>
+          </div>
+          <div class="innerspan"><span class="dontuse" style="text-transform:uppercase">${$data["vehicleno"]}</span>
+          </div>
+          <div class="innerspan notshow"><span class="dontuse">${$data["vehiclename"]}</span>
+          </div>
+          <div class="innerspan notshow"><span class="dontuse">${$data["km"]}</span>
+        </div>
+        <div class="innerspan notshow"><span class="dontuse">${$data["total"]}</span>
+        </div>
+      </div>
+    </div>`)
+   }
+
+   $("#cancel").on('click', function(){
+    const $FORM = $("#form");
+    const $formRow = $FORM.find(".extData");
+    $formRow.each(function(){
+      const $input = $(this).find('input');
+      $input[0].value = "";
+    });
+    $("#Total").val("");
+    $("#tablebody").html("");
+   });
+   
+       $("#deletefullbill").on('click', function(){
+      let billno = $("#bulsuvs").text();
+      let conf = confirm(`Are you sure you want to delete Bill No. ${billno}`);
+      if (conf == true) {
+        $.ajax({
+            method: 'POST',
+            url: "../defaultpage/deleteBill",
+            data: {billno:billno},
+            success: function (result) {
+                //console.log(result);
+              $("#fullbillclose").click();
+            },  
+            error: function (result) {
+              //console.log(result);
+              alert("Try again bill is not deleted.");
+            }
+        });
+      }
+
+
+    });
+    $("#printfullbill").on('click', function(){
+      window.print();
+    });
+
+    $(".clickajax").on('click', billAbs);
+    function billAbs(v){
+      let billno = $(this).attr("id");
+      if(typeof billno == "undefined"){
+          billno = $(v).attr("id");
+      }
+      console.log(billno);
+      let headerdata = $(`#${billno}`).find(".dontuse");
+      let giveheader = $("#modalvisibility").find(".byjevo");
+      // headerdata.forEach((item, index)=>{
+      //   giveheader.eq(index).text(item.text());
+      // });
+      console.log("afterjjjjjjjjjjjjjjjjjjjjjkk")
+      for(let i=0; i<headerdata.length; i++){
+        giveheader.eq(i).text(headerdata.eq(i).text());
+        console.log(headerdata.eq(i).text());
+        console.log(i);
+      }
+      $("#modalvisibility").addClass("modalvisible");
+      getParticulars(billno);
+    };
+    $("#fullbillclose").on('click', function(e){
+      console.log("printinvlsa");
+      $("#modalvisibility").removeClass("modalvisible");
+      e.stopPropagation();
+    });
+
+
+
+$("#searchbi").on('click', function(){
+  var billn = $("#budkci").val();
+  $.ajax({
+            method: 'GET',
+            url: "http://127.0.0.1:8000/search/",
+            data: {bill:billn},
+            success: function (data) {
+              var result = "";
+              data.searchbill.forEach((room, i) => {
+                result += `<div id="${room.billno}" class="clickajax">  <div>
+      <div class="abstractB">
+          <div class="innerspan">
+            <span>Bill No.</span><span class="dontuse">${room.billno}</span>
+          </div>
+          <div class="innerspan nonesmall">
+            <span>Name : </span><span class="dontuse">${room.name}</span>
+          </div>
+          <div class="innerspan nonesmall">
+            <span>Date : </span><span class="dontuse">${room.created_at}</span>
+          </div>
+          <div class="innerspan notshow">
+            <span>Email : </span><span class="dontuse">${room.email}</span>
+          </div>
+          <div class="innerspan notshow">
+            <span>Mobile No. </span><span class="dontuse">${room.mobileno}</span>
+          </div>
+          <div class="innerspan">
+            <span>Vehicle No. </span><span class="dontuse">${room.vehicleno}</span>
+          </div>
+          <div class="innerspan notshow">
+            <span>Vehicle Name : </span><span class="dontuse">${room.vehiclename}</span>
+          </div>
+          <div class="innerspan notshow">
+            <span>K M :</span><span class="dontuse">${room.km}</span>
+          </div>
+          <div class="innerspan notshow">
+            <span>Total : </span><span class="dontuse">${room.total}</span>
+          </div>
+        
+    </div></div>`;
+
+            })
+            $("#snpa").html(result);
+            $(".clickajax").on('click', billAbs);},
+            error: function (data) {
+              console.log(data);
+            }
+          });
+});
+
+
+  
+
+
+  </script>
 
     
 <?php
