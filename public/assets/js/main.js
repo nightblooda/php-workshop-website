@@ -67,7 +67,6 @@
       }
     }
   });
-  // Navigation active state on scroll
   var nav_sections = $('section');
   var main_nav = $('.main-nav, .mobile-nav');
   var main_nav_height = $('#header').outerHeight();
@@ -86,13 +85,11 @@
     });
   });
 
-  // jQuery counterUp (used in Whu Us section)
   $('[data-toggle="counter-up"]').counterUp({
     delay: 10,
     time: 1000
   });
 
-  // Porfolio isotope and filter
   $(window).on('load', function () {
     var portfolioIsotope = $('.portfolio-container').isotope({
       itemSelector: '.portfolio-item'
@@ -105,7 +102,6 @@
     });
   });
 
-  // Testimonials carousel (uses the Owl Carousel library)
   $(".testimonials-carousel").owlCarousel({
     autoplay: true,
     dots: true,
@@ -113,7 +109,6 @@
     items: 1
   });
 
-  // Clients carousel (uses the Owl Carousel library)
   $(".clients-carousel").owlCarousel({
     autoplay: true,
     dots: true,
