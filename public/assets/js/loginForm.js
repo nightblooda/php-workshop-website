@@ -17,17 +17,12 @@ jQuery(document).ready (function($){
     if(passwordError || emailError){
       $("#validbh").html("Email and Password are neccessay.");
     }else{
-    //   var $data = [];
-    //   $data["email"] = f.eq(0).val();
-    //   $data["password"] = f.eq(1).val();
     var $data = $form.serialize();
-    //console.log($data);
       ajaxfun($data);
     }
   });
   
   function ajaxfun($data){
-    //console.log($data);
       $.ajax({
           type: "POST", 
           url: "../defaultpage/login",
@@ -50,17 +45,5 @@ jQuery(document).ready (function($){
       });
       
   }
-  
-//   function ajaxfun(email, password){
-//         console.log(email);
-//         console.log(password);
-//           var xhttp = new XMLHttpRequest();
-//   xhttp.onreadystatechange = function() {
-//     if (this.readyState == 4 && this.status == 200) {
-//       console.log(this.responseText);
-//     }
-//   };
-//   xhttp.open("POST", "../defaultpage/login", true);
-//   xhttp.send('email='+email+'&password='+password);
-//   }
+
 });
