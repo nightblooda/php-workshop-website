@@ -2,7 +2,6 @@
 
   class MainController{
     public $isUserLoged= false;
-    public $isUserSignup= false;
 
     public function modal($model){
       if(file_exists('../app/models/'.$model.'.php')){
@@ -13,6 +12,7 @@
       }
     }
 
+
     public function view($view, $data= []){
       if(file_exists('../app/views/'.$view.'.php')){
         require_once('../app/views/'.$view.'.php');
@@ -21,15 +21,16 @@
       }
     }
 
+
+
     public function checkUserLogin(){
 
-      // $isUserLoged = false;
       $loged_id= "";
       $loged_username="";
       
       if(isset($_SESSION["loginid"])){
         // $this->isUserLoged= $this->modal('User')->isUserLogedIn();
-        if(isset($_SESSION["workshopname"]) || isset($_SESSION["name"]) || isset($_SESSION["workshopaddress"])){
+        if(isset($_SESSION["workshopname"]) && isset($_SESSION["name"]) && isset($_SESSION["workshopaddress"])){
             $this->isUserLoged = true;
         }else{
             $_SESSION["workshopname"] = trim($_COOKIE["workshopname"]);
@@ -58,3 +59,4 @@
   }
 
 ?>
+
